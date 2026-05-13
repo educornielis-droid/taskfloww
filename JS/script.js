@@ -366,9 +366,7 @@ async function doLogout(e) {
 
   // ⭐ OCULTAR BARRA LATERAL
   const sidebar = document.getElementById('sidebar');
-  if (sidebar) {
-    sidebar.style.display = 'none';
-  }
+  if (sidebar) sidebar.style.display = '';
 
   // ⭐ LIMPIAR BÚSQUEDA
   const searchInput = document.getElementById('s-input');
