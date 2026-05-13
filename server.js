@@ -1,6 +1,6 @@
 'use strict';
-const app  = require('./app');
-const pool = require('./db');
+const app = require('./src/app');
+const pool = require('./src/db');
 require('dotenv').config();
 
 const PORT = process.env.PORT || 3000;
