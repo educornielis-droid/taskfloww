@@ -18,8 +18,7 @@ const activityRouter = require('./routes/activity');
 const app = express();
 app.use(cors());
 app.use(express.json());
-app.use(express.static(__dirname + '/../public'));
-
+app.use(express.static(__dirname + '/..'));
 /* HEALTH CHECK */
 app.get('/api/ping', (req, res) => res.json({ ok: true, ts: new Date() }));
 
