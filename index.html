@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>TaskFlow — Gestión de Proyectos</title>
+<link rel="shortcut icon" href="./img/taskflow_logo.jpeg" type="image/x-icon">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<link rel="stylesheet" href="CSS/assistant.css">
+<style>
+  /* ⭐ FIX: Ocultar autofill del navegador en barra de búsqueda */
+  #s-input {
+    background-color: transparent !important;
+    color: inherit !important;
+    caret-color: var(--t1);
+  }
+
+  /* Ocultar autofill de Chrome/Chromium */
+  #s-input:-webkit-autofill,
+  #s-input:-webkit-autofill:hover,
+  #s-input:-webkit-autofill:focus,
+  #s-input:-webkit-autofill:active,
+  #s-input:-webkit-autofill:focus textarea {
+    -webkit-box-shadow: 0 0 0 30px transparent inset !important;
+    -webkit-text-fill-color: transparent !important;
+    background-color: transparent !important;
+  }
+
+  #s-input::placeholder {
+    color: var(--t2);
+    opacity: 1;
+  }
+</style>
+</head>
+<body>
+<div id="toast-wrap"></div>
+<!-- ════════════════════════════════════════════════
+    AUTH OVERLAY
+════════════════════════════════════════════════ -->
+<div id="auth-overlay">
+
+  <!-- LOGIN -->
+  <div id="auth-login" class="auth-screen show">
+    <div class="auth-left">
+      <div class="auth-brand">
+        <div class="auth-lm">TF</div>
+        <h1>TaskFlow</h1>
+      </div>
+      <p class="auth-tagline">Gestión centralizada de proyectos y control de tiempo para equipos que quieren crecer.</p>
+      <ul class="feat-list">
+        <li class="feat-item"><div class="feat-chk">✓</div><span class="feat-txt">Tablero Kanban con drag &amp; drop real</span></li>
+        <li class="feat-item"><div class="feat-chk">✓</div><span class="feat-txt">Cronómetro en tiempo real persistente</span></li>
+        <li class="feat-item"><div class="feat-chk">✓</div><span class="feat-txt">Reportes exportables en PDF</span></li>
+        <li class="feat-item"><div class="feat-chk">✓</div><span class="feat-txt">Accesibilidad WCAG 2.1 nivel AA</span></li>
+      </ul>
+    </div>
+    <div class="auth-right">
+      <div class="auth-form-wrap">
+        <h2>Bienvenido de vuelta</h2>
+        <p class="sub">Ingresa tus credenciales para continuar</p>
+        <div id="login-err" class="err-box"></div>
+        <form id="login-form" class="fstack" onsubmit="doLogin(event)">
+          <div class="fg"><label class="fl">Correo electrónico</label><input id="login-email" class="fi" type="email" placeholder="tu@correo.com" required autocomplete="email"></div>
+          <div class="fg">
+            <label class="fl" style="display:flex;justify-content:space-between;align-items:center">Contraseña<a style="font-size:.7rem;color:var(--blue);font-weight:700;cursor:pointer" onclick="showAuth('recover')">¿Olvidaste tu contraseña?</a></label>
+            <div style="position:relative">
+              <input id="login-pass" class="fi" type="password" placeholder="••••••••" required style="width:100%;padding-right:40px">
+              <button type="button" onclick="togglePass('login-pass',this)" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--t2);font-size:.85rem;line-height:1">👁</button>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-p" style="width:100%;justify-content:center;padding:10px;font-size:.85rem">Iniciar sesión</button>
+        </form>
+        <div class="divider">o</div>
+        <div class="auth-switch">¿No tienes cuenta? <a onclick="showAuth('register')">Regístrate aquí</a></div>
+        <div style="margin-top:18px;background:var(--s1);border:1px solid var(--bdr);border-radius:var(--r);padding:10px 14px;font-size:.72rem;color:var(--t2)">
+          💡 <strong>Demo:</strong> usa cualquier correo + contraseña. Ej: <code style="background:var(--s2);padding:1px 5px;border-radius:4px">admin@creativehub.com</code> / <code style="background:var(--s2);padding:1px 5px;border-radius:4px">12345678</code>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- REGISTRO -->
+  <div id="auth-register" class="auth-screen">
+    <div class="auth-left">
+      <div class="auth-brand"><div class="auth-lm">TF</div><h1>TaskFlow</h1></div>
+      <p class="auth-tagline">Crea tu cuenta y empieza a gestionar proyectos con tu equipo hoy mismo.</p>
+      <ul class="feat-list">
+        <li class="feat-item"><div class="feat-chk">✓</div><span class="feat-txt">Roles: Admin, Gerente, Empleado</span></li>
+        <li class="feat-item"><div class="feat-chk">✓</div><span class="feat-txt">Interfaz 100% en español</span></li>
+        <li class="feat-item"><div class="feat-chk">✓</div><span class="feat-txt">Datos guardados en localStorage</span></li>
+        <li class="feat-item"><div class="feat-chk">✓</div><span class="feat-txt">Despliegue en Railway / Render</span></li>
+      </ul>
+    </div>
+    <div style="width:480px;flex-shrink:0;background:var(--s0);display:flex;align-items:center;justify-content:center;padding:40px 52px;overflow-y:auto">
+      <div style="width:100%">
+        <h2 style="font-size:1.3rem;font-weight:800;letter-spacing:-.03em;margin-bottom:5px">Crear cuenta</h2>
+        <p class="sub" style="font-size:.79rem;color:var(--t1);margin-bottom:24px">Completa los datos para registrarte en TaskFlow</p>
+        <div id="reg-err" class="err-box"></div>
+        <form id="reg-form" class="fstack" onsubmit="doRegister(event)">
+          <div class="fg"><label class="fl">Nombre completo *</label><input id="reg-name" class="fi" type="text" placeholder="María González" required></div>
+          <div class="frow">
+            <div class="fg"><label class="fl">Correo electrónico *</label><input id="reg-email" class="fi" type="email" placeholder="tu@correo.com" required></div>
+            <div class="fg"><label class="fl">Cédula</label><input id="reg-cedula" class="fi" type="text" placeholder="1234567" maxlength="10"></div>
+          </div>
+          <div class="frow">
+            <div class="fg"><label class="fl">Contraseña *</label>
+              <div style="position:relative">
+                <input id="reg-pass" class="fi" type="password" placeholder="Min. 8, mayús, núm, especial" required minlength="8" style="width:100%;padding-right:40px">
+                <button type="button" onclick="togglePass('reg-pass',this)" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--t2);font-size:.85rem;line-height:1">👁</button>
+              </div>
+            </div>
+            <div class="fg"><label class="fl">Confirmar *</label>
+              <div style="position:relative">
+                <input id="reg-pass2" class="fi" type="password" placeholder="Repite" required style="width:100%;padding-right:40px">
+                <button type="button" onclick="togglePass('reg-pass2',this)" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--t2);font-size:.85rem;line-height:1">👁</button>
+              </div>
+            </div>
+          </div>
+          <div id="pwd-requirements" style="display:none;background:var(--s1);border:1px solid var(--bdr);border-radius:var(--r);padding:10px;font-size:.7rem;color:var(--t1);line-height:1.6">
+            <strong>Requisitos de contraseña:</strong><br>
+            ✓ Mínimo 8 caracteres<br>
+            ✓ Al menos una mayúscula (A-Z)<br>
+            ✓ Al menos una minúscula (a-z)<br>
+            ✓ Al menos un número (0-9)<br>
+            ✓ Al menos un especial (!@#$%^&*)<br>
+          </div>
+          <div class="frow">
+            <div class="fg"><label class="fl">Rol</label><select id="reg-role" class="fi fsel"><option value="Empleado">Empleado</option><option value="Gerente">Gerente</option><option value="Admin">Administrador</option></select></div>
+            <div class="fg"><label class="fl">Organización</label><input id="reg-org" class="fi" type="text" placeholder="CreativeHub" value="CreativeHub"></div>
+          </div>
+          <button type="submit" class="btn btn-p" style="width:100%;justify-content:center;padding:10px;font-size:.85rem">Crear cuenta</button>
+        </form>
+        <div class="auth-switch" style="margin-top:16px">¿Ya tienes cuenta? <a onclick="showAuth('login')">Inicia sesión</a></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RECUPERAR -->
+  <div id="auth-recover" class="auth-screen" style="align-items:center;justify-content:center;background:var(--bg)">
+    <div class="auth-recover-wrap">
+      <div style="text-align:center;margin-bottom:26px">
+        <div style="width:52px;height:52px;background:var(--blue-l);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;margin:0 auto 16px">🔑</div>
+        <h2 style="font-size:1.2rem;font-weight:800;margin-bottom:6px">Recuperar contraseña</h2>
+        <p style="font-size:.8rem;color:var(--t1);line-height:1.5">Ingresa tu correo y te enviaremos un enlace para restablecer tu contraseña.</p>
+      </div>
+      <div id="rec-ok" style="display:none;background:var(--grn-l);border:1px solid rgba(22,163,74,.2);border-radius:var(--r);padding:12px 14px;font-size:.79rem;color:var(--grn);font-weight:600;text-align:center;margin-bottom:16px">✓ Enlace enviado. Revisa tu bandeja de entrada.</div>
+      <form id="rec-form" class="fstack" onsubmit="doRecover(event)">
+        <div class="fg"><label class="fl">Correo electrónico</label><input id="rec-email" class="fi" type="email" placeholder="tu@correo.com" required></div>
+        <button type="submit" class="btn btn-p" style="width:100%;justify-content:center;padding:10px">Enviar enlace de recuperación</button>
+        <button type="button" class="btn btn-g" style="width:100%;justify-content:center" onclick="showAuth('login')">← Volver al inicio de sesión</button>
+      </form>
+    </div>
+  </div>
+
+</div><!-- /auth-overlay -->
+
+<!-- ════════════════════════════════════════════════
+     MODALS
+════════════════════════════════════════════════ -->
+<div id="m-task" class="modal-over">
+  <div class="modal">
+    <div class="modal-hdr"><h3>Editar tarea</h3><button class="modal-x" onclick="closeM('m-task')">✕</button></div>
+    <div class="fstack">
+      <div class="fg"><label class="fl">Nombre *</label><input id="mt-name" class="fi" placeholder="Nombre de la tarea"></div>
+      <div class="fg"><label class="fl">Descripción</label><textarea id="mt-desc" class="fi" rows="3" style="resize:vertical"></textarea></div>
+      <div class="frow">
+        <div class="fg"><label class="fl">Prioridad</label><select id="mt-prio" class="fi fsel"><option value="Alta">Alta</option><option value="Media">Media</option><option value="Baja">Baja</option></select></div>
+        <div class="fg"><label class="fl">Fecha límite</label><input id="mt-date" class="fi" type="text" placeholder="30 Mar"></div>
+      </div>
+      <div class="row g8 mt8">
+        <button id="mt-save" class="btn btn-p f1" style="justify-content:center">Guardar cambios</button>
+        <button id="mt-del" class="btn btn-d">Eliminar</button>
+        <button class="btn btn-g" onclick="closeM('m-task')">Cancelar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="m-newtask" class="modal-over">
+  <div class="modal">
+    <div class="modal-hdr"><h3>Nueva tarea</h3><button class="modal-x" onclick="closeM('m-newtask')">✕</button></div>
+    <form id="nt-form" class="fstack" onsubmit="doNewTask(event)">
+      <input type="hidden" id="nt-col" value="todo">
+      <div class="fg"><label class="fl">Nombre *</label><input id="nt-name" class="fi" placeholder="Nombre de la tarea" required></div>
+      <div class="fg"><label class="fl">Descripción</label><textarea id="nt-desc" class="fi" rows="2" style="resize:vertical"></textarea></div>
+      <div class="frow">
+        <div class="fg"><label class="fl">Prioridad</label><select id="nt-prio" class="fi fsel"><option value="Alta">Alta</option><option value="Media" selected>Media</option><option value="Baja">Baja</option></select></div>
+        <div class="fg"><label class="fl">Fecha límite</label><input id="nt-date" class="fi" type="text" placeholder="30 Mar"></div>
+      </div>
+      <div class="row g8 mt8">
+        <button type="submit" class="btn btn-p f1" style="justify-content:center">Crear tarea</button>
+        <button type="button" class="btn btn-g" onclick="closeM('m-newtask')">Cancelar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+    APP SHELL
+════════════════════════════════════════════════ -->
+<div id="app">
+
+  <!-- Botón flotante para abrir sidebar en modo TDAH -->
+  <button id="enfoque-toggle" class="btn btn-p" style="display:none; padding:10px 16px; font-size:0.9rem; gap:6px; align-items:center; position:fixed; left:20px; bottom:20px; z-index:499;" onclick="toggleSidebarTDAH()" title="Mostrar menú de navegación">📋 Menú</button>
+
+  <!-- SIDEBAR -->
+  <aside id="sidebar">
+    <div class="sb-logo">
+      <button class="sb-mark" id="sb-tog" title="Abrir/Cerrar menú" style="border:none;cursor:pointer;background:var(--blue);color:#fff;font-weight:800;border-radius:10px;">TF</button>
+      <span class="sb-word">Task<em>Flow</em></span>
+    </div>
+    <nav class="sb-nav">
+      <a class="sb-item active" data-page="dashboard" onclick="nav(this,'dashboard')"><span class="sb-ico">⊞</span><span class="sb-lbl">Dashboard</span><span class="sb-tip">Dashboard</span></a>
+      <a class="sb-item" data-page="projects" onclick="nav(this,'projects')"><span class="sb-ico">📁</span><span class="sb-lbl">Proyectos</span><span class="sb-tip">Proyectos</span></a>
+      <a class="sb-item" data-page="kanban" onclick="nav(this,'kanban')"><span class="sb-ico">☰</span><span class="sb-lbl">Mis Tareas</span><span class="sb-tip">Mis Tareas</span><span class="sb-badge" id="sb-cnt">0</span></a>
+      <a class="sb-item" data-page="timer" onclick="nav(this,'timer')"><span class="sb-ico">⏱</span><span class="sb-lbl">Cronómetro</span><span class="sb-tip">Cronómetro</span></a>
+      <div class="sb-grp">Reportes</div>
+      <a class="sb-item" data-page="reports" onclick="nav(this,'reports')"><span class="sb-ico">📊</span><span class="sb-lbl">Reportes</span><span class="sb-tip">Reportes</span></a>
+      <a class="sb-item" data-page="timelog" onclick="nav(this,'timelog')"><span class="sb-ico">🕐</span><span class="sb-lbl">Historial</span><span class="sb-tip">Historial</span></a>
+      <div class="sb-grp">Sistema</div>
+      <a class="sb-item" data-page="create-project" onclick="nav(this,'create-project')"><span class="sb-ico">＋</span><span class="sb-lbl">Nuevo proyecto</span><span class="sb-tip">Nuevo proyecto</span></a>
+      <a class="sb-item" data-page="task-detail" onclick="nav(this,'task-detail')"><span class="sb-ico">📝</span><span class="sb-lbl">Detalle de Tarea</span><span class="sb-tip">Detalle de Tarea</span></a>
+      <a class="sb-item" data-page="project-detail" onclick="nav(this,'project-detail')"><span class="sb-ico">🗂</span><span class="sb-lbl">Detalle Proyecto</span><span class="sb-tip">Detalle Proyecto</span></a>
+      <a class="sb-item" data-page="profile" onclick="nav(this,'profile')"><span class="sb-ico">👤</span><span class="sb-lbl">Perfil</span><span class="sb-tip">Perfil</span></a>
+      <a class="sb-item" data-page="access" onclick="nav(this,'access')"><span class="sb-ico">♿</span><span class="sb-lbl">Accesibilidad</span><span class="sb-tip">Accesibilidad</span></a>
+      <div class="sb-grp">Sesión</div>
+      <button class="sb-item" onclick="doLogout(); return false;" style="color:var(--ros);cursor:pointer;text-align:left"><span class="sb-ico">🚪</span><span class="sb-lbl">Cerrar sesión</span><span class="sb-tip">Cerrar sesión</span></button>
+      <a class="sb-item" onclick="showAuth('register')" style="color:var(--grn)"><span class="sb-ico">👤</span><span class="sb-lbl">Ver Registro</span><span class="sb-tip">Ver Registro</span></a>
+      <a class="sb-item" onclick="showAuth('recover')" style="color:var(--amb)"><span class="sb-ico">🔑</span><span class="sb-lbl">Ver Recuperación</span><span class="sb-tip">Ver Recuperación</span></a>
+    </nav>
+    <div class="sb-user">
+      <div class="sb-user-inner" onclick="nav(document.querySelector('[data-page=profile]'),'profile')">
+        <div class="av av-s av-blue" id="sb-av" style="width:28px;height:28px;flex-shrink:0">VF</div>
+        <div class="sb-uinfo"><div class="sb-uname" id="sb-uname">Valeria Fonseca</div><div class="sb-urole" id="sb-urole">Empleado · IUJO</div></div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div id="main">
+    <header id="topbar">
+      <div class="tb-title" id="tb-title">Dashboard</div>
+      <div class="search-wrap" style="position:relative">
+        <span class="search-ico">🔍</span>
+        <input id="s-input" class="search" type="search" placeholder="Busca tu proyecto" autocomplete="off" spellcheck="false" data-lpignore="true" data-form-type="other" style="width:200px; background-color: transparent !important;" value="">
+        <div id="search-dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--s0);border:1px solid var(--bdr);border-radius:var(--r);max-height:300px;overflow-y:auto;z-index:999;margin-top:4px;box-shadow:0 4px 16px rgba(0,0,0,.1)">
+          <div id="search-results" style="max-height:300px;overflow-y:auto"></div>
+        </div>
+      </div>
+      <div class="row g8">
+        <button id="mob-menu-btn" aria-label="Abrir menú" onclick="toggleSidebar()">☰</button>
+        <div style="position:relative">
+          <div class="tb-btn" id="tb-notif" style="cursor:pointer">🔔<span class="tb-badge" id="notif-badge" style="display:none">0</span></div>
+          <div id="notif-dropdown" style="display:none;position:absolute;right:0;top:100%;margin-top:8px;background:var(--s0);border:1px solid var(--bdr);border-radius:var(--r);width:320px;max-height:400px;overflow-y:auto;z-index:1000;box-shadow:0 4px 16px rgba(0,0,0,.1)">
+            <div style="padding:12px 16px;border-bottom:1px solid var(--bdr);font-weight:700;font-size:.85rem">Notificaciones</div>
+            <div id="notif-list"></div>
+            <div style="padding:12px 16px;border-top:1px solid var(--bdr);text-align:center;font-size:.75rem;color:var(--t2)">
+              <button class="btn btn-g btn-sm" onclick="markAllNotifRead()">Marcar como leídas</button>
+            </div>
+          </div>
+        </div>
+        <div class="tb-btn" onclick="nav(document.querySelector('[data-page=access]'),'access')">⚙</div>
+        <div class="av av-s av-blue" id="tb-av" style="width:32px;height:32px;border-radius:var(--r);cursor:pointer;font-size:.62rem" onclick="nav(document.querySelector('[data-page=profile]'),'profile')">VF</div>
+      </div>
+    </header>
+
+    <!-- ══ PAGE: DASHBOARD ══ -->
+    <div class="page active" id="pg-dashboard">
+      <div class="pg">
+        <div class="pg-hdr anim"><h2 id="dash-greeting">¡Buenos días, Valeria 👋</h2><p>Aquí tienes el resumen de tu actividad de hoy.</p></div>
+        <div class="g4 mb20">
+          <div class="stat anim a1"><div class="stat-ico" style="background:var(--blue-l)">📁</div><div class="stat-lbl">Proyectos activos</div><div class="stat-val" style="color:var(--blue)" id="d-projs">0</div><div class="stat-sub"><span class="trend up" id="d-projs-month">↑ 0</span> este mes</div></div>
+          <div class="stat anim a2"><div class="stat-ico" style="background:var(--amb-l)">📋</div><div class="stat-lbl">Tareas pendientes</div><div class="stat-val" style="color:var(--amb)" id="d-tasks">0</div><div class="stat-sub"><span class="trend" id="d-high-priority" style="color:var(--ros)">0</span> alta prioridad</div></div>
+          <div class="stat anim a3"><div class="stat-ico" style="background:var(--teal-l)">⏱</div><div class="stat-lbl">Horas hoy</div><div class="stat-val" style="color:var(--teal)" id="d-today-hours">0h 0m</div><div class="stat-sub">Meta: 8h diarias</div></div>
+          <div class="stat anim a4"><div class="stat-ico" style="background:var(--vio-l)">📈</div><div class="stat-lbl">Horas esta semana</div><div class="stat-val" style="color:var(--vio)" id="d-week-hours">0h 0m</div><div class="stat-sub" id="d-productivity-sub"><span class="trend up">↑ 0%</span> vs semana anterior</div></div>
+        </div>
+        <div class="g2 mb20">
+          <div class="card anim">
+            <div class="row ai-c jb mb16"><div class="card-t" style="margin:0">Productividad semanal</div><span class="tag t-blue">Esta semana</span></div>
+            <div class="bch" id="d-weekly-chart" style="height:88px;align-items:flex-end">
+              <div style="text-align:center;color:var(--t2);width:100%">Cargando datos...</div>
+            </div>
+          </div>
+          <div class="card anim">
+            <div class="row ai-c jb mb16"><div class="card-t" style="margin:0">Notificaciones</div><button class="btn btn-g btn-sm">Ver todas</button></div>
+            <div id="d-notif-list"></div>
+          </div>
+        </div>
+        <div class="card anim">
+          <div class="row ai-c jb mb16"><div class="card-t" style="margin:0">Mis tareas pendientes</div><button class="btn btn-p btn-sm" onclick="openNewTask('todo')">+ Nueva tarea</button></div>
+          <table class="tbl"><thead><tr><th>Tarea</th><th>Proyecto</th><th>Prioridad</th><th>Vence</th><th>Estado</th></tr></thead><tbody id="d-tbody"></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ PAGE: PROJECTS ══ -->
+    <div class="page" id="pg-projects">
+      <div class="pg">
+        <div class="row ai-c jb mb16">
+          <div class="pg-hdr" style="margin:0"><h2>Proyectos</h2><p>Todos tus proyectos activos e historial.</p></div>
+          <button class="btn btn-p" onclick="nav(document.querySelector('[data-page=create-project]'),'create-project')">+ Nuevo proyecto</button>
+        </div>
+        <div class="row g8 mb16">
+          <button class="btn btn-p btn-sm" id="pf-all"  onclick="filterP('all',this)">Todos</button>
+          <button class="btn btn-g btn-sm" id="pf-act"  onclick="filterP('Activo',this)">Activos</button>
+          <button class="btn btn-g btn-sm" id="pf-done" onclick="filterP('Completado',this)">Completados</button>
+        </div>
+        <div id="proj-list"></div>
+      </div>
+    </div>
+
+    <!-- ══ PAGE: CREATE PROJECT ══ -->
+    <div class="page" id="pg-create-project">
+      <div class="pg" style="max-width:700px">
+        <div class="row ai-c g8 mb20"><button class="btn btn-g btn-sm" onclick="nav(document.querySelector('[data-page=projects]'),'projects')">← Proyectos</button><div class="pg-hdr" style="margin:0"><h2>Nuevo proyecto</h2></div></div>
+        <div class="card">
+          <div class="card-t">Información del proyecto</div>
+          <form id="proj-form" class="fstack" onsubmit="doNewProj(event)">
+            <div class="fg"><label class="fl">Nombre del proyecto *</label><input id="pf-name" class="fi" placeholder="Ej. Rediseño portal web CreativeHub" required></div>
+            <div class="fg"><label class="fl">Descripción</label><textarea class="fi" rows="3" style="resize:vertical" placeholder="Objetivo del proyecto…"></textarea></div>
+            <div class="frow">
+              <div class="fg"><label class="fl">Fecha de inicio *</label><input id="pf-start" class="fi" type="date" value="2026-03-22"></div>
+              <div class="fg"><label class="fl">Fecha de cierre *</label><input id="pf-end" class="fi" type="date" value="2026-05-31"></div>
+            </div>
+            <div class="frow">
+              <div class="fg"><label class="fl">Prioridad</label><select id="pf-prio" class="fi fsel"><option>Alta</option><option selected>Media</option><option>Baja</option></select></div>
+              <div class="fg"><label class="fl">Color del proyecto</label><input id="pf-color" class="fi" type="color" value="#2462E9" style="height:42px;padding:4px 8px;cursor:pointer"></div>
+            </div>
+            <div class="row g8 mt8">
+              <button type="submit" class="btn btn-p f1" style="justify-content:center">Crear proyecto</button>
+              <button type="button" class="btn btn-g" onclick="nav(document.querySelector('[data-page=projects]'),'projects')">Cancelar</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ PAGE: PROJECT DETAIL ══ -->
+    <div class="page" id="pg-project-detail">
+      <div class="pg">
+        <div class="row ai-c g8 mb16"><button class="btn btn-g btn-sm" onclick="nav(document.querySelector('[data-page=projects]'),'projects')">← Proyectos</button><h2 style="font-size:1.1rem;font-weight:800">TaskFlow MVP</h2><span class="tag t-blue">Activo</span><span class="tag t-ros">Alta prioridad</span></div>
+        <div class="g2 mb20">
+          <div class="card anim">
+            <div class="card-t">Información general</div>
+            <p style="font-size:.8rem;color:var(--t1);line-height:1.6;margin-bottom:14px">Plataforma web para CreativeHub. Centraliza proyectos, tiempo y reportes. Kanban, cronómetro y WCAG 2.1 AA.</p>
+            <div class="row g20 mb16">
+              <div><div style="font-size:.62rem;color:var(--t2);font-weight:700;margin-bottom:2px">INICIO</div><div style="font-size:.8rem;font-family:var(--mono)">Feb 2026</div></div>
+              <div><div style="font-size:.62rem;color:var(--t2);font-weight:700;margin-bottom:2px">CIERRE</div><div style="font-size:.8rem;font-family:var(--mono)">May 2026</div></div>
+              <div><div style="font-size:.62rem;color:var(--t2);font-weight:700;margin-bottom:2px">TAREAS</div><div style="font-size:.8rem;font-weight:700" id="pd-tcnt">0 / 8</div></div>
+            </div>
+            <div class="row jb mb8"><span style="font-size:.76rem;color:var(--t1)">Progreso general</span><span style="font-size:.8rem;font-weight:700;color:var(--blue)" id="pd-pct">68%</span></div>
+            <div class="pt h8"><div class="pf" id="pd-bar" style="width:68%;background:var(--blue)"></div></div>
+          </div>
+          <div class="card anim">
+            <div class="row ai-c jb mb16"><div class="card-t" style="margin:0">Equipo &amp; carga</div><button class="btn btn-g btn-sm">+ Agregar</button></div>
+            <div class="col g12">
+              <div class="tchip"><div class="av av-s av-blue">VF</div><div class="f1"><div style="font-size:.78rem;font-weight:600">Valeria Fonseca</div><div style="font-size:.65rem;color:var(--t2)">5 tareas</div></div><div style="width:72px"><div class="pt h4"><div class="pf" style="width:62%;background:var(--blue)"></div></div></div><span style="font-size:.7rem;font-weight:700;color:var(--blue);min-width:28px;text-align:right">62%</span></div>
+              <div class="tchip"><div class="av av-s av-amb">EC</div><div class="f1"><div style="font-size:.78rem;font-weight:600">Eduardo Cornielis</div><div style="font-size:.65rem;color:var(--t2)">7 tareas</div></div><div style="width:72px"><div class="pt h4"><div class="pf" style="width:88%;background:var(--amb)"></div></div></div><span style="font-size:.7rem;font-weight:700;color:var(--amb);min-width:28px;text-align:right">88%</span></div>
+              <div class="tchip"><div class="av av-s av-vio">CC</div><div class="f1"><div style="font-size:.78rem;font-weight:600">Cristina Chirino</div><div style="font-size:.65rem;color:var(--t2)">4 tareas</div></div><div style="width:72px"><div class="pt h4"><div class="pf" style="width:45%;background:var(--vio)"></div></div></div><span style="font-size:.7rem;font-weight:700;color:var(--vio);min-width:28px;text-align:right">45%</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="card anim">
+          <div class="row ai-c jb mb16"><div class="card-t" style="margin:0">Tareas del proyecto</div><button class="btn btn-p btn-sm" onclick="openNewTask('todo')">+ Nueva tarea</button></div>
+          <table class="tbl"><thead><tr><th>Tarea</th><th>Asignado</th><th>Prioridad</th><th>Vence</th><th>Estado</th></tr></thead><tbody id="pd-tbody"></tbody></table>
+        </div>
+      </div>
+    </div>
+    
+    <!-- ══ PAGE: KANBAN ══ -->
+    <div class="page" id="pg-kanban">
+      <div class="pg">
+        <div class="row ai-c jb mb16 wrap" style="gap:10px">
+          <div class="pg-hdr" style="margin:0"><h2>Tablero Kanban</h2><p>Arrastra las tarjetas para cambiar el estado.</p></div>
+          <div class="row g8 ai-c wrap">
+            <!-- Filtro Mis tareas -->
+            <button id="kb-filter-mine" class="btn btn-p btn-sm" onclick="toggleMineFilter()" title="Mostrar solo mis tareas">
+              👤 Mis tareas
+            </button>
+            <!-- Filtro por proyecto -->
+            <select id="kb-proj-filter" class="fi fsel" style="font-size:.75rem;padding:5px 28px 5px 10px;height:32px" onchange="applyKanbanFilter()">
+              <option value="">Todos los proyectos</option>
+            </select>
+            <button class="btn btn-p btn-sm" onclick="openNewTask('todo')">+ Nueva tarea</button>
+          </div>
+        </div>
+        <div class="kb">
+          <div id="col-todo" class="kbc"><div class="kbc-hdr"><div class="kbc-dot" style="background:var(--t2)"></div><span class="kbc-name">Por hacer</span><span class="kbc-cnt" id="cnt-todo">0</span></div><div id="cards-todo"></div><button class="kb-add" onclick="openNewTask('todo')">＋ Agregar tarea</button></div>
+          <div id="col-progress" class="kbc" style="border-color:rgba(36,98,233,.3);background:var(--blue-l)"><div class="kbc-hdr"><div class="kbc-dot" style="background:var(--blue)"></div><span class="kbc-name">En progreso</span><span class="kbc-cnt" id="cnt-progress" style="background:rgba(36,98,233,.12);color:var(--blue);border-color:rgba(36,98,233,.25)">0</span></div><div id="cards-progress"></div><button class="kb-add" onclick="openNewTask('progress')">＋ Agregar tarea</button></div>
+          <div id="col-done" class="kbc" style="border-color:rgba(22,163,74,.2)"><div class="kbc-hdr"><div class="kbc-dot" style="background:var(--grn)"></div><span class="kbc-name">Completado</span><span class="kbc-cnt" id="cnt-done" style="background:var(--grn-l);color:var(--grn);border-color:rgba(22,163,74,.2)">0</span></div><div id="cards-done"></div><button class="kb-add" onclick="openNewTask('done')">＋ Agregar tarea</button></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ PAGE: TASK DETAIL ══ -->
+    <div class="page" id="pg-task-detail">
+      <div class="pg">
+        <div class="row ai-c g8 mb20"><button class="btn btn-g btn-sm" onclick="nav(document.querySelector('[data-page=kanban]'),'kanban')">← Kanban</button><div class="pg-hdr" style="margin:0"><h2>Detalle de tarea</h2></div></div>
+        <div class="g2" style="align-items:start">
+          <div class="card anim">
+            <div class="card-t">Detalles</div>
+            <div class="fstack">
+              <div class="fg"><label class="fl">Nombre de la tarea *</label><input class="fi" id="td-name" value="Diseño de API REST"></div>
+              <div class="fg"><label class="fl">Descripción</label><textarea class="fi" id="td-desc" rows="3" style="resize:vertical">Diseñar y documentar los endpoints principales de la API REST para el módulo de autenticación y gestión de proyectos.</textarea></div>
+              <div class="frow">
+                <div class="fg"><label class="fl">Prioridad</label><select class="fi fsel" id="td-prio"><option>Alta</option><option>Media</option><option>Baja</option></select></div>
+                <div class="fg"><label class="fl">Estado</label><select class="fi fsel" id="td-status"><option>Por hacer</option><option selected>En progreso</option><option>En revisión</option><option>Completada</option></select></div>
+              </div>
+              <div class="frow">
+                <div class="fg"><label class="fl">Fecha límite</label><input class="fi" type="date" value="2026-03-24"></div>
+                <div class="fg"><label class="fl">Asignado a</label><select class="fi fsel"><option>Valeria Fonseca</option><option>Eduardo Cornielis</option><option>Cristina Chirino</option><option>Andrea Melchor</option></select></div>
+              </div>
+              <div class="row g8 mt8">
+                <button class="btn btn-p f1" style="justify-content:center" onclick="toast('Cambios guardados','s')">Guardar cambios</button>
+                <button class="btn btn-d" onclick="toast('Tarea eliminada','i')">Eliminar</button>
+              </div>
+            </div>
+          </div>
+          <div class="card anim">
+            <div class="card-t">Comentarios</div>
+            <div id="cmt-list">
+              <div class="cmt-item"><div class="av av-s av-amb" style="flex-shrink:0">EC</div><div class="cmt-bub f1"><div class="cmt-txt">Ya tengo el schema de la BD listo, pueden basarse en eso para los endpoints.</div><div class="cmt-meta">Eduardo Cornielis · hace 2 horas</div></div></div>
+              <div class="cmt-item"><div class="av av-s av-blue" style="flex-shrink:0">VF</div><div class="cmt-bub f1"><div class="cmt-txt">Perfecto, voy a revisarlo y actualizo el documento de endpoints.</div><div class="cmt-meta">Valeria Fonseca · hace 1 hora</div></div></div>
+            </div>
+            <div class="row g8 mt12"><input class="fi f1" id="cmt-in" type="text" placeholder="Escribe un comentario…"><button class="btn btn-p btn-sm" onclick="addComment()">Enviar</button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ PAGE: TIMER ══ -->
+    <div class="page" id="pg-timer">
+      <div class="pg">
+        <div class="pg-hdr mb16"><h2>Control de tiempo</h2><p>Registra las horas trabajadas por tarea y proyecto.</p></div>
+        <div class="g2" style="align-items:start;gap:20px">
+          <div class="card anim" style="text-align:center">
+            <div class="card-t" style="text-align:center">Cronómetro activo</div>
+            <div class="tmr-ring">
+              <svg viewBox="0 0 196 196" width="196" height="196">
+                <circle class="tc-track" cx="98" cy="98" r="85"></circle>
+                <circle id="tc-glow" class="tc-prog" cx="98" cy="98" r="85" style="opacity:.18;filter:blur(5px);stroke-dasharray:534;stroke-dashoffset:534"></circle>
+                <circle id="tc-prog" class="tc-prog" cx="98" cy="98" r="85" style="stroke-dasharray:534;stroke-dashoffset:534"></circle>
+              </svg>
+              <div class="tmr-center"><div id="tmr-dig" class="tmr-dig">00:00:00</div><div id="tmr-lbl" class="tmr-lbl">detenido</div></div>
+            </div>
+            <div class="row jc g12 mb20">
+              <button id="t-s" class="t-btn t-s" onclick="tStart()">▶</button>
+              <button id="t-p" class="t-btn t-p" onclick="tPause()" style="display:none">⏸</button>
+              <button id="t-x" class="t-btn t-x" onclick="tStop()" style="display:none">⏹</button>
+            </div>
+            <div class="fstack">
+              <div class="fg"><label class="fl">Proyecto</label><select id="tmr-proj" class="fi fsel" onchange="ST.tProj=this.value"><option>TaskFlow MVP</option><option>CreativeHub Intranet</option><option>Rediseño Portal Web</option></select></div>
+              <div class="fg"><label class="fl">Tarea activa</label><select id="tmr-task" class="fi fsel" onchange="ST.tTask=this.value"><option>Diseño de API REST</option><option>Implementar RBAC backend</option><option>Maquetado módulo login</option><option>Testing módulo auth</option></select></div>
+            </div>
+            <div class="ib ib-grn row ai-c g8 mt12" style="text-align:left"><span>●</span>Tiempo guardado automáticamente en la base de datos</div>
+          </div>
+          <div class="col g16">
+            <div class="card anim">
+              <div class="card-t">Sesiones hoy</div>
+              <div style="padding:14px;text-align:center;border:1px solid var(--bdr);border-radius:var(--r);background:var(--s1)">
+                <div id="tmr-sessions-today" style="font-size:1.4rem;font-weight:800;color:var(--teal);font-family:var(--mono)">0</div>
+                <div style="font-size:.67rem;color:var(--t2);margin-top:3px">Sesiones registradas</div>
+              </div>
+            </div>
+            <div class="card anim"><div class="card-t">Actividad reciente (hoy)</div><div id="tmr-log"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ PAGE: TIMELOG ══ -->
+    <div class="page" id="pg-timelog">
+      <div class="pg">
+        <div class="pg-hdr mb16"><h2>Historial de tiempo</h2><p>Registro completo de horas por tarea y proyecto.</p></div>
+        <div class="row g8 mb16 wrap ai-c">
+          <input id="log-date-start" class="fi" type="date" value="2026-03-01" style="width:148px">
+          <span style="font-size:.78rem;color:var(--t2)">—</span>
+          <input id="log-date-end" class="fi" type="date" value="2026-03-22" style="width:148px">
+          <select id="log-project-filter" class="fi fsel" style="width:188px"><option value="">Todos los proyectos</option></select>
+          <button class="btn btn-p btn-sm" onclick="filterAndRenderLog()">Filtrar</button>
+          <button class="btn btn-g btn-sm" style="margin-left:auto" onclick="exportLogToPDF()">↓ Exportar PDF</button>
+        </div>
+        <div class="card">
+          <table class="tbl"><thead><tr><th>Fecha</th><th>Tarea</th><th>Proyecto</th><th>Inicio</th><th>Fin</th><th>Duración</th><th>Acción</th></tr></thead><tbody id="log-tbody"></tbody></table>
+          <div class="row jb ai-c mt12" style="padding-top:12px;border-top:1px solid var(--bdr)">
+            <span style="font-size:.75rem;color:var(--t1)">Total período: <strong style="color:var(--blue)" id="log-tot">—</strong></span>
+            <div class="row g8"><button class="btn btn-g btn-sm">← Anterior</button><button class="btn btn-g btn-sm">Siguiente →</button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ PAGE: REPORTS ══ -->
+    <div class="page" id="pg-reports">
+      <div class="pg">
+        <div class="row ai-c jb mb20">
+          <div class="pg-hdr" style="margin:0"><h2>Reportes &amp; Usuarios</h2><p>Análisis de productividad y gestión del equipo.</p></div>
+          <button class="btn btn-p btn-sm" onclick="toast('PDF generado','s')">↓ Exportar PDF</button>
+        </div>
+        <div class="g2 mb20">
+          <div class="card anim">
+            <div class="row ai-c jb mb16"><div class="card-t" style="margin:0">Horas por proyecto</div><div class="row g6"><button class="btn btn-p btn-sm" onclick="renderRep('week',this)">Semana</button><button class="btn btn-g btn-sm" onclick="renderRep('month',this)">Mes</button></div></div>
+            <div id="rep-chart" class="bch" style="height:110px;align-items:flex-end"></div>
+          </div>
+          <div class="card anim">
+            <div class="card-t">Productividad por usuario</div>
+            <div class="col g12">
+              <div><div class="row jb mb8"><div class="row ai-c g8"><div class="av av-s av-blue">VF</div><span style="font-size:.78rem;font-weight:700">Valeria Fonseca</span></div><span style="font-size:.74rem;font-family:var(--mono);color:var(--blue)">22h 15m</span></div><div class="pt h6"><div class="pf" style="width:75%;background:var(--blue)"></div></div></div>
+              <div><div class="row jb mb8"><div class="row ai-c g8"><div class="av av-s av-amb">EC</div><span style="font-size:.78rem;font-weight:700">Eduardo Cornielis</span></div><span style="font-size:.74rem;font-family:var(--mono);color:var(--amb)">28h 40m</span></div><div class="pt h6"><div class="pf" style="width:97%;background:var(--amb)"></div></div></div>
+              <div><div class="row jb mb8"><div class="row ai-c g8"><div class="av av-s av-vio">CC</div><span style="font-size:.78rem;font-weight:700">Cristina Chirino</span></div><span style="font-size:.74rem;font-family:var(--mono);color:var(--vio)">18h 05m</span></div><div class="pt h6"><div class="pf" style="width:61%;background:var(--vio)"></div></div></div>
+              <div><div class="row jb mb8"><div class="row ai-c g8"><div class="av av-s av-grn">AM</div><span style="font-size:.78rem;font-weight:700">Andrea Melchor</span></div><span style="font-size:.74rem;font-family:var(--mono);color:var(--grn)">15h 30m</span></div><div class="pt h6"><div class="pf" style="width:50%;background:var(--grn)"></div></div></div>
+            </div>
+          </div>
+        </div>
+        <div class="card anim">
+          <div class="row ai-c jb mb16"><div class="card-t" style="margin:0">Gestión de usuarios</div><button class="btn btn-p btn-sm" onclick="toast('Invitación enviada','s')">+ Nuevo usuario</button></div>
+          <table class="tbl"><thead><tr><th>Usuario</th><th>Correo</th><th>Rol</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>
+            <tr><td><div class="row ai-c g8"><div class="av av-s av-blue">VF</div><span class="td-p">Valeria Fonseca</span></div></td><td>v.fonseca@creativehub.com</td><td><span class="tag t-teal">Empleado</span></td><td><span class="tag t-grn">Activo</span></td><td><div class="row g6"><button class="btn btn-g btn-xs" onclick="toast('Editando...','i')">Editar</button><button class="btn btn-g btn-xs">Cambiar rol</button></div></td></tr>
+            <tr><td><div class="row ai-c g8"><div class="av av-s av-amb">EC</div><span class="td-p">Eduardo Cornielis</span></div></td><td>e.cornielis@creativehub.com</td><td><span class="tag t-vio">Gerente</span></td><td><span class="tag t-grn">Activo</span></td><td><div class="row g6"><button class="btn btn-g btn-xs" onclick="toast('Editando...','i')">Editar</button><button class="btn btn-g btn-xs">Cambiar rol</button></div></td></tr>
+            <tr><td><div class="row ai-c g8"><div class="av av-s av-vio">CC</div><span class="td-p">Cristina Chirino</span></div></td><td>c.chirino@creativehub.com</td><td><span class="tag t-teal">Empleado</span></td><td><span class="tag t-grn">Activo</span></td><td><div class="row g6"><button class="btn btn-g btn-xs" onclick="toast('Editando...','i')">Editar</button><button class="btn btn-g btn-xs">Cambiar rol</button></div></td></tr>
+            <tr><td><div class="row ai-c g8"><div class="av av-s av-ros">AM</div><span class="td-p">Andrea Melchor</span></div></td><td>a.melchor@creativehub.com</td><td><span class="tag t-ros">Admin</span></td><td><span class="tag t-grn">Activo</span></td><td><div class="row g6"><button class="btn btn-g btn-xs">Editar</button><button class="btn btn-d btn-xs" onclick="toast('Usuario desactivado','i')">Desactivar</button></div></td></tr>
+          </tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ PAGE: PROFILE ══ -->
+    <div class="page" id="pg-profile">
+      <div class="pg">
+        <div class="prof-banner anim">
+          <div class="prof-av" id="prof-av">VF</div>
+          <div class="f1">
+            <h2 style="font-size:1.2rem;font-weight:800;color:#fff;letter-spacing:-.03em;margin-bottom:5px" id="prof-name">Valeria Fonseca</h2>
+            <div class="row ai-c g8 mb8"><span style="background:rgba(255,255,255,.2);color:#fff;font-size:.69rem;font-weight:700;padding:2px 10px;border-radius:20px" id="prof-role">Empleado</span><span style="font-size:.77rem;color:rgba(255,255,255,.72)" id="prof-email">v.fonseca@creativehub.com</span></div>
+            <div class="row g20"><div><span style="font-size:1.1rem;font-weight:800;color:#fff" id="p-pcount">4</span><span style="font-size:.7rem;color:rgba(255,255,255,.7);margin-left:4px">proyectos</span></div><div><span style="font-size:1.1rem;font-weight:800;color:#fff" id="p-tcount">0</span><span style="font-size:.7rem;color:rgba(255,255,255,.7);margin-left:4px">tareas activas</span></div><div><span style="font-size:1.1rem;font-weight:800;color:#fff">84h</span><span style="font-size:.7rem;color:rgba(255,255,255,.7);margin-left:4px">este mes</span></div></div>
+          </div>
+          <button class="btn" style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3)">Editar perfil</button>
+        </div>
+        <div class="g2" style="align-items:start">
+          <div class="card anim">
+            <div class="card-t">Datos personales</div>
+            <div class="fstack">
+              <div class="fg"><label class="fl">Nombre completo</label><input class="fi" id="pf-pname" value="Valeria Fonseca"></div>
+              <div class="fg"><label class="fl">Correo electrónico</label><input class="fi" id="pf-pemail" value="v.fonseca@creativehub.com"></div>
+              <div class="fg"><label class="fl">Rol</label><input class="fi" id="pf-prole" value="Empleado" disabled></div>
+              <button class="btn btn-p btn-sm" style="align-self:flex-start" onclick="toast('Cambios guardados','s')">Guardar cambios</button>
+            </div>
+            <div style="border-top:1px solid var(--bdr);margin-top:18px;padding-top:18px">
+              <div class="card-t">Cambiar contraseña</div>
+              <div class="fstack">
+                <div class="fg"><label class="fl">Contraseña actual</label><input class="fi" type="password" placeholder="••••••••"></div>
+                <div class="fg"><label class="fl">Nueva contraseña</label><input class="fi" type="password" placeholder="••••••••"></div>
+                <button class="btn btn-g btn-sm" style="align-self:flex-start" onclick="toast('Contraseña actualizada','s')">Actualizar</button>
+              </div>
+            </div>
+            <div style="border-top:1px solid var(--bdr);margin-top:18px;padding-top:18px">
+              <div class="card-t">Sesión</div>
+              <div class="fstack">
+                <p style="font-size:0.85rem;color:var(--t2);margin:0 0 12px">Cerrar tu sesión actual. Tendrás que volver a iniciar sesión para acceder.</p>
+                <button class="btn btn-d btn-sm" style="align-self:flex-start" onclick="doLogout(); return false;">Cerrar sesión</button>
+              </div>
+            </div>
+          </div>
+          <div class="card anim">
+            <div class="card-t">Actividad reciente</div>
+            <div id="activity-log" style="max-height:300px;overflow-y:auto">
+              <div style="text-align:center;color:var(--t2);padding:20px;font-size:0.85rem">Cargando actividad...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ PAGE: ACCESSIBILITY ══ -->
+    <div class="page" id="pg-access">
+      <div class="pg" style="max-width:740px">
+        <div class="pg-hdr mb16"><h2>Configuración de accesibilidad</h2><p>Preferencias personalizadas — WCAG 2.1 nivel AA.</p></div>
+        <div class="ib ib-blue mb16 anim">♿ Las preferencias se guardan por usuario y se aplican en toda la plataforma.</div>
+        <div class="card mb16 anim">
+          <div class="card-t">Visual</div>
+          <div class="tog-row"><div><div class="tl-t">Modo alto contraste</div><div class="tl-d">Mayor contraste para mejorar la legibilidad</div></div><div class="tog" id="tog-contraste" tabindex="0" role="switch" aria-checked="false" aria-label="Activar modo alto contraste"></div></div>
+          <div class="tog-row"><div><div class="tl-t">Tamaño de fuente</div><div class="tl-d">Ajusta el texto en toda la plataforma</div></div>
+            <div class="row g6" id="fsz-grp">
+              <button class="fsz-btn" style="font-size:.65rem" data-sz="pequeno" onclick="setSz(this)" aria-label="Fuente pequeña" title="Pequeño">A</button>
+              <button class="fsz-btn on" data-sz="normal" onclick="setSz(this)" aria-label="Fuente normal" title="Normal">A</button>
+              <button class="fsz-btn" style="font-size:.95rem" data-sz="grande" onclick="setSz(this)" aria-label="Fuente grande" title="Grande">A</button>
+              <button class="fsz-btn" style="font-size:1.1rem" data-sz="xl" onclick="setSz(this)" aria-label="Fuente extra grande" title="Muy grande">A</button>
+            </div>
+          </div>
+          <div class="tog-row"><div><div class="tl-t">Fuente OpenDyslexic</div><div class="tl-d">Facilita la lectura para usuarios con dislexia</div></div><div class="tog" id="tog-dyslexic" tabindex="0" role="switch" aria-checked="false" aria-label="Activar fuente OpenDyslexic"></div></div>
+          <div class="tog-row"><div><div class="tl-t">Espaciado entre letras y líneas</div><div class="tl-d">Mayor separación para mejor comprensión</div></div>
+            <div class="row g6" id="spc-grp">
+              <button class="fsz-btn on" onclick="setSpc(this)">Normal</button>
+              <button class="fsz-btn" onclick="setSpc(this)">Ampliado</button>
+            </div>
+          </div>
+        </div>
+        <div class="card mb16 anim">
+          <div class="card-t">Cognitivo y enfoque</div>
+          <div class="tog-row"><div><div class="tl-t">Modo enfoque (TDAH)</div><div class="tl-d">Oculta elementos distractores — muestra solo la tarea activa</div></div><div class="tog" id="tog-enfoque" tabindex="0" role="switch" aria-checked="false" aria-label="Activar modo enfoque TDAH"></div></div>
+        </div>
+        <div class="card mb20 anim">
+          <div class="card-t">Navegación y lectores de pantalla</div>
+          <div class="tog-row"><div><div class="tl-t">Indicadores de foco visibles</div><div class="tl-d">Borde azul visible al navegar con teclado (Tab)</div></div><div class="tog on" id="tog-foco" tabindex="0" role="switch" aria-checked="true" aria-label="Activar indicadores de foco visibles"></div></div>
+          <div class="tog-row"><div><div class="tl-t">Compatibilidad lectores de pantalla</div><div class="tl-d">ARIA activo — NVDA, JAWS, VoiceOver</div></div><span class="tag t-grn">Siempre activo</span></div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<!-- Asistente Virtual - Cargado por assistant.js -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="JS/script.js"></script>
+<script src="JS/assistant.js"></script>
+</body>
+</html>
