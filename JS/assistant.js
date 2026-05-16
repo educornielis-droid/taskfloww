@@ -442,7 +442,7 @@ class AsistenteVirtual {
     }
 
     // Si encontró una coincidencia razonable
-    if (mejorMatch && mejorPuntaje > 0) {
+    if (mejorMatch && mejorPuntaje >= 40) {
       return mejorMatch.respuesta;
     }
 
