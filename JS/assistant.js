@@ -327,6 +327,10 @@ class AsistenteVirtual {
   establecerFiltro(categoria) {
     this.filtroActual = categoria === 'todos' ? null : categoria;
 
+    // Ocultar chips de respuesta rápida al seleccionar categoría
+    const chips = document.getElementById('va-quick-replies');
+    if(chips) chips.style.display = 'none';
+    
     // Actualizar estilo de botones
     const botones = document.querySelectorAll('.va-filtro-btn');
     botones.forEach(btn => {
@@ -343,10 +347,6 @@ class AsistenteVirtual {
     // Mostrar sugerencias de la categoría seleccionada
     let mensaje = this.obtenerSugerencias();
     this.agregarMensaje('bot', mensaje);
-
-    // Ocultar chips de respuesta rápida al seleccionar categoría
-    const chips = document.getElementById('va-quick-replies');
-    if(chips) chips.style.display = 'none';
   }
 
   mostrarPreguntasDropdown() {
