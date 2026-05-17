@@ -316,10 +316,18 @@ class AsistenteVirtual {
   }
 
   enviarRapido(texto) {
+    // Resetear filtro para buscar en todas las categorías
+    this.filtroActual = null;
+    
+    // Resetear visual de botones de categoría
+    document.querySelectorAll('.va-filtro-btn').forEach(btn => {
+      btn.classList.remove('va-filtro-activo');
+    });
+    document.querySelector('[data-filtro="todos"]')?.classList.add('va-filtro-activo');
+  
     const input = document.getElementById('va-input');
     if(input) input.value = texto;
     this.enviar();
-    // Ocultar chips después de usar uno
     const chips = document.getElementById('va-quick-replies');
     if(chips) chips.style.display = 'none';
   }
