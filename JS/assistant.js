@@ -16,7 +16,7 @@ const VA_PREGUNTAS_FRECUENTES = {
     respuesta: '📝 **Para crear una cuenta:**\n\n1. Haz clic en "Regístrate aquí"\n2. Completa: Nombre, Email, Contraseña\n3. Selecciona tu rol (Admin, Gerente o Empleado)\n4. Haz clic en "Crear cuenta"\n\n✅ ¡Tu cuenta estará lista inmediatamente!',
     categoria: 'autenticacion'
   },
-  'olvidé contraseña|recuperar contraseña|reset password': {
+  'olvidé contraseña|recuperar contraseña|cambiar contraseña|reset password': {
     respuesta: '🔐 **Para recuperar tu contraseña:**\n\n1. En la pantalla de login, haz clic en "¿Olvidaste tu contraseña?"\n2. Ingresa tu email\n3. Recibirás un enlace para restablecer\n4. Sigue el enlace y crea una nueva contraseña\n\n⏱️ El enlace expira en 1 hora',
     categoria: 'autenticacion'
   },
