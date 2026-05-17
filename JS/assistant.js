@@ -30,7 +30,7 @@ const VA_PREGUNTAS_FRECUENTES = {
     respuesta: '👥 **Para agregar miembros al proyecto:**\n\n1. Abre el proyecto\n2. Haz clic en "+ Miembro"\n3. Selecciona a los usuarios de la lista\n4. Asigna rol (Admin, Gerente o Empleado)\n5. Haz clic en "Agregar"\n\n📌 Solo Admin y Gerentes pueden agregar miembros',
     categoria: 'proyectos'
   },
-  'roles|permisos|admin|gerente|empleado': {
+  'roles|rol|que roles|qué roles|existen roles|permisos|admin|gerente|empleado': {
     respuesta: '🎓 **Roles en TaskFlow:**\n\n👨‍💼 **Admin:** Acceso total, puede eliminar proyectos\n👔 **Gerente:** Crea proyectos, asigna tareas\n👨‍💻 **Empleado:** Completa tareas asignadas\n\n💡 El creador del proyecto es automáticamente Admin',
     categoria: 'proyectos'
   },
