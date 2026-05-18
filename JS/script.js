@@ -51,6 +51,12 @@ async function fetchWithAuth(url, options) {
       return { error: 'Session expired' };
     }
   }
+
+    if (!response.ok) {
+      const err = await response.json();
+      throw new Error(err.error || 'Error del servidor');
+    }
+
   return response.json();
 }
 
@@ -770,7 +776,14 @@ async function loadAll(){
     }
     populateTimerSelects();
   } catch(ex){
+
+    if(ex.message && ex.message.includes('posterior')) {
+        toast('❌ ' + ex.message, 'e');
+        return;
+      }
+
     console.error('loadAll error:', ex);
+
     toast('Error cargando datos: '+ex.message,'e');
   }
 }
@@ -1589,14 +1602,31 @@ async function doNewProj(e){
   }
 
   const name=document.getElementById('pf-name').value.trim();if(!name)return;
+
+  //VALIDACION DE FECHA
+    const startVal = document.getElementById('pf-start').value;
+    const endVal   = document.getElementById('pf-end').value;
+    if (!startVal || !endVal) {
+      toast('❌ Las fechas de inicio y cierre son obligatorias', 'e');
+      return;
+    }
+    if (new Date(endVal) <= new Date(startVal)) {
+      toast('❌ La fecha de cierre debe ser posterior a la fecha de inicio (no puede ser el mismo día)', 'e');
+      document.getElementById('pf-end').focus();
+      return;
+    }
+
   const uid = getEffectiveUserId() || ST.user?.id || 'local';
   const body={
     name,
     color:       document.getElementById('pf-color').value || '#2462E9',
     status:      'Activo',
     priority:    document.getElementById('pf-prio').value,
-    start_date:  document.getElementById('pf-start').value,
-    end_date:    document.getElementById('pf-end').value,
+    
+    //VALIDACION DE FECHAS 
+    start_date: startVal,
+    end_date:   endVal,
+
     created_by:  uid,
   };
   const isLocalUser = !ST.user?.id || String(ST.user.id).startsWith('local-');

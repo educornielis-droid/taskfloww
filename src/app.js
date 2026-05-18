@@ -128,9 +128,21 @@ app.get('/api/proyectos/:id', verifyToken, async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+/*app.post('/api/proyectos', verifyToken, authorize(['Admin','Gerente']), async (req, res) => {
+  const { name, description, color, status, priority, start_date, end_date, created_by } = req.body;
+  if (!name || !start_date || !end_date) return res.status(400).json({ error: 
+    //VALIDACION DE FECHAS 
+  if (new Date(end_date) <= new Date(start_date)) {
+    return res.status(400).json({ error: 'La fecha de cierre debe ser posterior a la de inicio. No se permite el mismo día.' });
+  }*/
+
 app.post('/api/proyectos', verifyToken, authorize(['Admin','Gerente']), async (req, res) => {
   const { name, description, color, status, priority, start_date, end_date, created_by } = req.body;
   if (!name || !start_date || !end_date) return res.status(400).json({ error: 'Nombre, fechas son requeridos.' });
+  if (new Date(end_date) <= new Date(start_date)) {
+    return res.status(400).json({ error: 'La fecha de cierre debe ser posterior a la de inicio. No se permite el mismo día.' });
+  }
+
   const creatorId = created_by || req.user.id;
   try {
     const { rows } = await pool.query(
