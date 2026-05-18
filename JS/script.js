@@ -2716,7 +2716,7 @@ function enableKeyboardKanban() {
       card.style.opacity = '0.7';
       card.style.cursor = 'not-allowed';
       card.setAttribute('aria-label',
-        ${`Tarea: ${card.querySelector('.kcard-t')?.textContent || ''}.Columna: ${colName}.🔒 COMPLETADA - No puede moverse`});
+        `Tarea: ${card.querySelector('.kcard-t')?.textContent || ''}. Columna: ${colName}. 🔒 COMPLETADA - No puede moverse`);
     } else {
       card.draggable = true;
       card.style.opacity = '1';
