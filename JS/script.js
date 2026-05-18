@@ -1207,6 +1207,19 @@ function renderTaskDetail(){
   if(statusEl) {
     const statusMap = {todo: 'Por hacer', progress: 'En progreso', review: 'En revisión', done: 'Completada'};
     statusEl.value = statusMap[task.column_status] || task.column_status || 'Por hacer';
+
+    // ⭐ BLOQUEO DE TAREAS COMPLETADAS: Deshabilitar cambios de estado
+    const isCompleted = task.column_status === 'done';
+    statusEl.disabled = isCompleted;
+    if(isCompleted) {
+      statusEl.title = '🔒 Esta tarea está completada y no puede cambiar de estado';
+      statusEl.style.opacity = '0.6';
+      statusEl.style.cursor = 'not-allowed';
+    } else {
+      statusEl.title = '';
+      statusEl.style.opacity = '1';
+      statusEl.style.cursor = 'pointer';
+    }
   }
 }
 
@@ -1221,6 +1234,27 @@ function editTask(id){
   document.getElementById('mt-desc').value=t.description||'';
   document.getElementById('mt-prio').value=t.priority||'Media';
   document.getElementById('mt-date').value=t.due_date||'';
+
+  // ⭐ BLOQUEO DE TAREAS COMPLETADAS
+  const isCompleted = t.column_status === 'done';
+  const nameEl = document.getElementById('mt-name');
+  const descEl = document.getElementById('mt-desc');
+  const prioEl = document.getElementById('mt-prio');
+  const dateEl = document.getElementById('mt-date');
+
+  if(isCompleted) {
+    nameEl.disabled = true;
+    descEl.disabled = true;
+    prioEl.disabled = true;
+    dateEl.disabled = true;
+    [nameEl, descEl, prioEl, dateEl].forEach(el => el.style.opacity = '0.6');
+  } else {
+    nameEl.disabled = false;
+    descEl.disabled = false;
+    prioEl.disabled = false;
+    dateEl.disabled = false;
+    [nameEl, descEl, prioEl, dateEl].forEach(el => el.style.opacity = '1');
+  }
 
   // ⭐ VALIDAR PERMISOS PARA ELIMINAR
   const deleteBtn = document.getElementById('mt-del');
@@ -1244,6 +1278,12 @@ function editTask(id){
   }
 
   document.getElementById('mt-save').onclick=async()=>{
+    // ⭐ Validar que no intente cambiar estado desde completada
+    if(t.column_status === 'done') {
+      toast('🔒 No puedes modificar una tarea completada','w');
+      return;
+    }
+
     const body={
       title:   document.getElementById('mt-name').value.trim()||t.title,
       description: document.getElementById('mt-desc').value,
@@ -1254,7 +1294,13 @@ function editTask(id){
       const updated=await API.put('/api/tareas/'+id, body);
       Object.assign(t, updated);
       renderKanban(); closeM('m-task'); toast('Tarea actualizada','s');
-    } catch(ex){ toast('Error actualizando tarea','e'); }
+    } catch(ex){ 
+      if(ex.message.includes('completada')) {
+        toast('🔒 ' + ex.message,'w');
+      } else {
+        toast('Error actualizando tarea','e');
+      }
+    }
   };
 
   openM('m-task');
@@ -2662,6 +2708,20 @@ function enableKeyboardKanban() {
     // Instrucciones para lectores de pantalla
     const colName = card.closest('.kbc')?.querySelector('.kbc-name')?.textContent || '';
     card.setAttribute('aria-label', `Tarea: ${card.querySelector('.kcard-t')?.textContent || ''}. Columna: ${colName}. Presiona Enter para seleccionar, flechas para mover.`);
+
+    
+    // ⭐ BLOQUEO: No permitir drag desde 'done'
+    if(task.column_status === 'done') {
+      card.draggable = false;
+      card.style.opacity = '0.7';
+      card.style.cursor = 'not-allowed';
+      card.setAttribute('aria-label',
+        ${`Tarea: ${card.querySelector('.kcard-t')?.textContent || ''}.Columna: ${colName}.🔒 COMPLETADA - No puede moverse`});
+    } else {
+      card.draggable = true;
+      card.style.opacity = '1';
+      card.style.cursor = 'grab';
+    }
     
     card.addEventListener('keydown', handleCardKeydown);
     card.addEventListener('focus', () => {
@@ -2724,6 +2784,14 @@ async function moveTaskKeyboard(taskId, currentCol, direction) {
   } else {
     return; // No puede moverse más
   }
+
+  // ⭐ BLOQUEO: Prevenir mover tarea completada
+  const task_check = ST.tasks.find(t => t.id === taskId);
+  if(task_check && task_check.column_status === 'done') {
+    toast('🔒 No puedes mover una tarea completada','w');
+    return;
+  }
+  
   
   const task = ST.tasks.find(t => t.id === taskId);
   if (!task) return;

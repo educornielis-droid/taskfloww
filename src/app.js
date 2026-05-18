@@ -245,7 +245,18 @@ app.put('/api/tareas/:id', verifyToken, async (req, res) => {
   if (req.user.role === 'Empleado' && assigned_to && assigned_to !== req.user.id) {
     return res.status(403).json({ error: 'Empleados no pueden reasignar tareas.' });
   }
+
   try {
+    // ⭐ BLOQUEO DE TAREAS COMPLETADAS: No pueden cambiar de 'done'
+    if (column_status && column_status !== 'done') {
+      const { rows: currentTask } = await pool.query(
+        'SELECT column_status FROM tasks WHERE id=$1',
+        [req.params.id]
+      );
+      if (currentTask.length && currentTask[0].column_status === 'done') {
+        return res.status(400).json({ error: 'No puedes cambiar el estado de una tarea completada.' });
+      }
+    }
     const { rows } = await pool.query(
       `UPDATE tasks SET title=COALESCE($1,title),description=COALESCE($2,description),
        column_status=COALESCE($3::task_column,column_status),priority=COALESCE($4::priority_level,priority),
@@ -297,6 +308,15 @@ app.patch('/api/tareas/:id/mover', verifyToken, async (req, res) => {
   const validCols = ['todo','progress','review','done'];
   if (!validCols.includes(column_status)) return res.status(400).json({ error: 'column_status inválido.' });
   try {
+    // ⭐ BLOQUEO DE TAREAS COMPLETADAS: No pueden cambiar de 'done'
+    const { rows: currentTask } = await pool.query(
+      'SELECT column_status FROM tasks WHERE id=$1',
+      [req.params.id]
+    );
+    if (currentTask.length && currentTask[0].column_status === 'done' && column_status !== 'done') {
+      return res.status(400).json({ error: 'No puedes cambiar el estado de una tarea completada.' });
+    }
+
     const progreso = column_status === 'done' ? 100 : column_status === 'todo' ? 0 : null;
     const { rows } = await pool.query(
       `UPDATE tasks SET column_status=$1::task_column, progress=COALESCE($2,progress), updated_at=NOW()
