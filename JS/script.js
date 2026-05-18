@@ -94,6 +94,33 @@ const PRIO_TAG  = {Alta:'t-ros',Media:'t-amb',Baja:'t-grn',alta:'t-ros',media:'t
 const PRIO_LABEL= {Alta:'Alta',Media:'Media',Baja:'Baja',alta:'Alta',media:'Media',baja:'Baja'};
 const COL_NAME  = {todo:'Por hacer',progress:'En progreso',review:'En revisión',done:'Completado'};
 
+
+// ⭐ TEMAS: Detectar preferencia del SO
+function getSystemThemePreference() {
+  if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+    return 'oscuro';
+  }
+  return 'claro';
+}
+
+// Aplicar tema según configuración
+function applyTheme(tema) {
+  if (!tema || tema === 'predeterminado') {
+    tema = getSystemThemePreference();
+  }
+  
+  // Remover clases antiguas
+  document.body.classList.remove('tema-claro', 'tema-oscuro');
+  
+  if (tema === 'oscuro') {
+    document.body.classList.add('tema-oscuro');
+  } else if (tema === 'claro') {
+    document.body.classList.add('tema-claro');
+  }
+  
+  return tema;
+}
+
 function avColor(initials='??'){
   const colors=['av-blue','av-amb','av-vio','av-grn','av-ros','av-teal'];
   const idx=(initials.charCodeAt(0)||0)%colors.length;
@@ -1202,6 +1229,16 @@ function renderTaskDetail(){
 
   const prioEl = document.getElementById('td-prio');
   if(prioEl) prioEl.value = task.priority || 'Media';
+
+  // ⭐ Aplicar modo_tema
+  if(p.modo_tema) {
+    applyTheme(p.modo_tema);
+    document.querySelectorAll('input[name="modo-tema"]').forEach(radio => {
+      radio.checked = (radio.value === p.modo_tema);
+    });
+  } else {
+    applyTheme('predeterminado');
+  }
 
   const statusEl = document.getElementById('td-status');
   if(statusEl) {

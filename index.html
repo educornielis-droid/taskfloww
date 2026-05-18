@@ -580,6 +580,23 @@
         <div class="card mb16 anim">
           <div class="card-t">Visual</div>
           <div class="tog-row"><div><div class="tl-t">Modo alto contraste</div><div class="tl-d">Mayor contraste para mejorar la legibilidad</div></div><div class="tog" id="tog-contraste" tabindex="0" role="switch" aria-checked="false" aria-label="Activar modo alto contraste"></div></div>
+          <div class="tog-row" style="flex-direction: column; align-items: flex-start;">
+            <div><div class="tl-t">🎨 Modo de Tema</div><div class="tl-d">Selecciona tu preferencia de tema</div></div>
+            <div style="display: flex; gap: 15px; margin-top: 10px; flex-wrap: wrap;">
+              <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.9rem;">
+                <input type="radio" name="modo-tema" value="predeterminado" id="tema-predeterminado" checked> 
+                <span>🎨 Sistema</span>
+              </label>
+              <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.9rem;">
+                <input type="radio" name="modo-tema" value="claro" id="tema-claro"> 
+                <span>☀️ Claro</span>
+              </label>
+              <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.9rem;">
+                <input type="radio" name="modo-tema" value="oscuro" id="tema-oscuro"> 
+                <span>🌙 Oscuro</span>
+              </label>
+            </div>
+          </div>
           <div class="tog-row"><div><div class="tl-t">Tamaño de fuente</div><div class="tl-d">Ajusta el texto en toda la plataforma</div></div>
             <div class="row g6" id="fsz-grp">
               <button class="fsz-btn" style="font-size:.65rem" data-sz="pequeno" onclick="setSz(this)" aria-label="Fuente pequeña" title="Pequeño">A</button>

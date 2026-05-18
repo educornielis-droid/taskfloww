@@ -10,6 +10,7 @@ const pool   = require('../db');
 const { verifyToken } = require('../middlewares/auth');
 
 const DEFAULTS = {
+  modo_tema:          'predeterminado',  // 'predeterminado', 'claro', 'oscuro'
   alto_contraste:     false,
   fuente_dyslexic:    false,
   modo_enfoque:       false,
@@ -34,9 +35,15 @@ router.get('/:usuarioId', verifyToken, async (req, res) => {
 });
 
 /* PUT /api/preferencias/:usuarioId */
-// Body: { alto_contraste?, fuente_dyslexic?, modo_enfoque?, tamano_fuente?, espaciado_letras?, indicadores_foco? }
+// Body: { modo_tema?, alto_contraste?, fuente_dyslexic?, modo_enfoque?, tamano_fuente?, espaciado_letras?, indicadores_foco? }
 router.put('/:usuarioId', verifyToken, async (req, res) => {
-  const { alto_contraste, fuente_dyslexic, modo_enfoque, tamano_fuente, espaciado_letras, indicadores_foco } = req.body;
+  const { modo_tema, alto_contraste, fuente_dyslexic, modo_enfoque, tamano_fuente, espaciado_letras, indicadores_foco } = req.body;
+
+  // Validar modo_tema
+  const validTemas = ['predeterminado', 'claro', 'oscuro'];
+  if (modo_tema && !validTemas.includes(modo_tema)) {
+    return res.status(400).json({ error: `modo_tema debe ser: ${validTemas.join(', ')}` });
+  }
 
   // Validar tamano_fuente
   const validTamanos = ['pequeno', 'normal', 'grande', 'xl'];
@@ -53,17 +60,18 @@ router.put('/:usuarioId', verifyToken, async (req, res) => {
   try {
     const { rows } = await pool.query(
       `INSERT INTO user_preferences
-         (profile_id, alto_contraste, fuente_dyslexic, modo_enfoque, tamano_fuente, espaciado_letras)
-       VALUES ($1,$2,$3,$4,$5,$6)
+         (profile_id, modo_tema, alto_contraste, fuente_dyslexic, modo_enfoque, tamano_fuente, espaciado_letras)
+       VALUES ($1,$2,$3,$4,$5,$6,$7)
        ON CONFLICT (profile_id) DO UPDATE SET
-         alto_contraste  = COALESCE($2, user_preferences.alto_contraste),
-         fuente_dyslexic = COALESCE($3, user_preferences.fuente_dyslexic),
-         modo_enfoque    = COALESCE($4, user_preferences.modo_enfoque),
-         tamano_fuente   = COALESCE($5, user_preferences.tamano_fuente),
-         espaciado_letras = COALESCE($6, user_preferences.espaciado_letras),
+         modo_tema       = COALESCE($2, user_preferences.modo_tema),
+         alto_contraste  = COALESCE($3, user_preferences.alto_contraste),
+         fuente_dyslexic = COALESCE($4, user_preferences.fuente_dyslexic),
+         modo_enfoque    = COALESCE($5, user_preferences.modo_enfoque),
+         tamano_fuente   = COALESCE($6, user_preferences.tamano_fuente),
+         espaciado_letras = COALESCE($7, user_preferences.espaciado_letras),
          updated_at      = NOW()
        RETURNING *`,
-      [req.params.usuarioId, alto_contraste, fuente_dyslexic, modo_enfoque, tamano_fuente, espaciado_letras]
+      [req.params.usuarioId, modo_tema, alto_contraste, fuente_dyslexic, modo_enfoque, tamano_fuente, espaciado_letras]
     );
     res.json(rows[0]);
   } catch (e) {
