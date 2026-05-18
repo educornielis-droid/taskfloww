@@ -10,7 +10,7 @@ const pool   = require('../db');
 const { verifyToken } = require('../middlewares/auth');
 
 const DEFAULTS = {
-  modo_tema:          'predeterminado',  // 'predeterminado', 'claro', 'oscuro'
+  modo_tema:          'claro',  // 'claro', 'sistema', 'oscuro'
   alto_contraste:     false,
   fuente_dyslexic:    false,
   modo_enfoque:       false,
@@ -40,7 +40,7 @@ router.put('/:usuarioId', verifyToken, async (req, res) => {
   const { modo_tema, alto_contraste, fuente_dyslexic, modo_enfoque, tamano_fuente, espaciado_letras, indicadores_foco } = req.body;
 
   // Validar modo_tema
-  const validTemas = ['predeterminado', 'claro', 'oscuro'];
+  const validTemas = ['claro', 'sistema', 'oscuro'];
   if (modo_tema && !validTemas.includes(modo_tema)) {
     return res.status(400).json({ error: `modo_tema debe ser: ${validTemas.join(', ')}` });
   }

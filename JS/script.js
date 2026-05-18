@@ -105,17 +105,20 @@ function getSystemThemePreference() {
 
 // Aplicar tema según configuración
 function applyTheme(tema) {
-  if (!tema || tema === 'predeterminado') {
-    tema = getSystemThemePreference();
-  }
-  
-  // Remover clases antiguas
-  document.body.classList.remove('tema-claro', 'tema-oscuro');
-  
-  if (tema === 'oscuro') {
-    document.body.classList.add('tema-oscuro');
+  // 'claro' = colores normales, 'sistema' = según preferencia SO, 'oscuro' = alto contraste
+  if (tema === 'sistema') {
+    // Detectar preferencia del SO y aplicar tema oscuro si está en modo oscuro
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      document.body.classList.add('alto-contraste');
+    } else {
+      document.body.classList.remove('alto-contraste');
+    }
+  } else if (tema === 'oscuro') {
+    // Forzar modo oscuro/alto contraste
+    document.body.classList.add('alto-contraste');
   } else if (tema === 'claro') {
-    document.body.classList.add('tema-claro');
+    // Remover modo oscuro
+    document.body.classList.remove('alto-contraste');
   }
   
   return tema;
@@ -2748,7 +2751,9 @@ function enableKeyboardKanban() {
 
     
     // ⭐ BLOQUEO: No permitir drag desde 'done'
-    if(task.column_status === 'done') {
+    const taskId = card.getAttribute('data-id');
+    const task = ST.tasks.find(t => t.id === taskId);
+    if(task && task.column_status === 'done') {
       card.draggable = false;
       card.style.opacity = '0.7';
       card.style.cursor = 'not-allowed';
