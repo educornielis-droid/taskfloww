@@ -586,6 +586,7 @@ function updateTmr(){
   const dh=document.getElementById('d-hours');if(dh&&ST.tSec>0){const m=Math.floor(ST.tSec/60);dh.textContent=Math.floor(m/60)+'h '+('0'+m%60).slice(-2)+'m';}
 }
 
+
 function tResume(){
   if(ST.tRun)return;
   ST.tRun=true; ST.tPaused=false; ST.tSes++;
@@ -652,6 +653,9 @@ function renderTmrLog(){
       <span style="font-family:var(--mono);font-size:.79rem;font-weight:700;color:${l.is_active?'var(--blue)':'var(--t1)'}">${dur}${l.is_active?' ●':''}</span>
     </div>`;
   }).join('');
+}
+async function verHistorialCronometro(){
+  nav(null, 'timelog');
 }
 
 /* ══════════════════════════════════════════════
@@ -1776,3 +1780,4 @@ function showKeyboardShortcutsHelp() {
   document.getElementById('m-shortcuts')?.remove();
   document.body.insertAdjacentHTML('beforeend', helpHtml);
 }
+
